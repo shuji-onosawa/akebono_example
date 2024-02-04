@@ -15,3 +15,7 @@ $ source .venv/bin/activate
 ```
 $ python3 -m pip install -r requirements.txt
 ```
+
+## akebono package
+- Please read ./akebono/README.md
+- Check the local_data_dir in ./akebono/config.py. If you want to change the directory which contains mca data cdf files, please change local_data_dir in config.py. If you want to store mca data cdf files in this repository, you should have better to ignore the files in .gitignore.
