@@ -74,11 +74,11 @@ def get_plot_trange_list(ilat_mlt_ds, mlt_range, ilat_range, mlat_range=[-90, 90
     return plot_trange_list
 
 
-def plot_mca_w_1day(date: str):
+def plot_mca_1day(date: str):
     '''
-    MCAのデータとMGFのデータをプロットする関数
+    MCAのデータをプロットする関数
     dateの日のデータをプロットする
-    1プロットの時間範囲は4分(general_plot.pyのplot_trange_listの設定に依存)
+    1プロットの時間範囲は4分(get_plot_trange_listの設定に依存)
     '''
     # データを取得、前処理
     ilat_ds = pytplot.get_data('akb_orb_inv', xarray=True)
@@ -110,11 +110,12 @@ def plot_mca_w_1day(date: str):
         save_path = save_dir+plot_trange[0][:10]+'_'+plot_trange[0][11:13]+plot_trange[0][14:16]
         pytplot.tplot(['akb_mca_Emax_pwr',
                        'akb_mca_Bmax_pwr'],
-                      var_label=['akb_orb_alt', 'akb_orb_inv', 'akb_orb_mlt'],
+                      var_label=['akb_orb_alt', 'akb_orb_inv', 'akb_orb_mlat'],
                       xsize=14, ysize=14, save_png=save_path, display=False)
 
+# 実効部
 akebono.orb(['1990-02-11', '1990-02-12'])
 akebono.vlf_mca(['1990-02-11', '1990-02-12'],
                 datatype='pwr',
                 del_invalid_data=['off', 'sms'])
-plot_mca_w_1day('1990-02-11')
+plot_mca_1day('1990-02-11')
