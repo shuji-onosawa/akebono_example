@@ -22,7 +22,7 @@ pws_vars = pyspedas.akebono.pws(trange=['2012-10-01', '2012-10-02'])
 
 tplot(['akb_pws_RX1', 'akb_pws_RX2'])
 ```
-
+Remote directory of electron density by 30s data estimated from UHR frequecny is https://www.darts.isas.jaxa.jp/stp/data/exosd/pws/NE/.
 
 #### Radiation Moniter (RDM)
 
