@@ -1,3 +1,5 @@
 akebono_data/
+data/
+plots/
 .venv
 *.pyc
