@@ -294,15 +294,18 @@ def orb_postprocessing(files):
     km_in_re = 6374.4
 
     xyz = np.array([[data['sc_pos_x']], [data['sc_pos_y']], [data['sc_pos_z']]]).transpose([2, 0, 1]).squeeze()
-    xyz = np.float64(xyz)
-    xyz_re = xyz/km_in_re
-    r_theta_phi = xyz_to_polar(xyz)
+    xyz = np.float64(xyz) # km
+    xyz_re = xyz/km_in_re # Re (Earth radius)
+    r_theta_phi = xyz_to_polar(xyz_re)
     rr = r_theta_phi[:, 0]
     th = r_theta_phi[:, 1]
     ph = r_theta_phi[:, 2]
+    mlat = np.float64(data['mlat'])
+    L_value = rr / np.cos(np.deg2rad(mlat))**2
     bmdl = np.array([[data['bmdl_x']], [data['bmdl_y']], [data['bmdl_z']]]).transpose([2, 0, 1]).squeeze()
     bmdl = np.float64(bmdl)
     bmdl_scaler = np.sqrt(np.sum(bmdl**2, axis=1))
+    store_data(prefix + 'R', data={'x': unix_times, 'y': rr})
     store_data(prefix + 'geo', data={'x': unix_times, 'y': xyz_re})
     store_data(prefix + 'gdlat', data={'x': unix_times, 'y': np.float64(data['gclat'])})
     store_data(prefix + 'gdlon', data={'x': unix_times, 'y': np.float64(data['gclon'])})
@@ -315,6 +318,7 @@ def orb_postprocessing(files):
     store_data(prefix + 'gclat', data={'x': unix_times, 'y': th})
     store_data(prefix + 'gclon', data={'x': unix_times, 'y': ph})
     store_data(prefix + 'bmdl_scaler', data={'x': unix_times, 'y': bmdl_scaler})
+    store_data(prefix + 'L', data={'x': unix_times, 'y': L_value})
     options(prefix + 'geo', 'ytitle', 'GEO')
     options(prefix + 'geo', 'ysubtitle', '[Re]')
     options(prefix + 'gdlat', 'ytitle', 'Geodetic latitude of the magnetic footprint')
@@ -337,6 +341,7 @@ def orb_postprocessing(files):
     options(prefix + 'gclat', 'ysubtitle', '[deg]')
     options(prefix + 'gclon', 'ytitle', 'Geocentric Longitude')
     options(prefix + 'gclon', 'ysubtitle', '[deg]')
+    options(prefix + 'L', 'ytitle', 'L-value')
 
     stored_names = filter(tplot_names(quiet=True),
                           prefix_project + prefix_descriptor + '*')
