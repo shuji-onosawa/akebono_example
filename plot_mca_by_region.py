@@ -5,32 +5,31 @@ import pytplot
 import akebono
 import datetime
 
-def get_plot_trange_list(ilat_mlt_ds, mlt_range, ilat_range, mlat_range=[-90, 90]):
+def get_plot_trange_list(orb_ds, mlt_range, ilat_range, mlat_range=[-90, 90]):
     '''
     時刻データの配列とMLT、ILATの範囲を指定して、
     プロットする時刻の範囲を取得する関数
     args:
-        ilat_mlt_ds: 時刻, ilat, mltのdataset. 1日分のデータを想定
+        orb_ds: 時刻, ilat, mltのdataset. 1日分のデータを想定
                     orbit dataの時刻は30秒間隔であることを想定
         mlt_range: プロットするMLTの範囲 [下限値, 上限値] list
         ilat_range: プロットするILATの範囲 [下限値, 上限値] list
     return:
         プロットする時刻の範囲のリスト [[開始時刻, 終了時刻], ...] list
     '''
-    # ilat_mlt_dsが'akb_orb_inv'と'akb_orb_MLT'の2つの変数を持っていることを確認
-    assert 'akb_orb_inv' in ilat_mlt_ds.variables
-    assert 'akb_orb_mlt' in ilat_mlt_ds.variables
+    # orb_dsが'akb_orb_inv'と'akb_orb_MLT'の2つの変数を持っていることを確認
+    assert 'akb_orb_inv' in orb_ds.variables
+    assert 'akb_orb_mlt' in orb_ds.variables
+    assert 'akb_orb_mlat' in orb_ds.variables
     # 条件を指定してデータをフィルタリング
-    condition = ((ilat_mlt_ds['akb_orb_inv'] >= ilat_range[0]) &
-                 (ilat_mlt_ds['akb_orb_inv'] <= ilat_range[1]) &
-                 (ilat_mlt_ds['akb_orb_mlt'] >= mlt_range[0]) &
-                 (ilat_mlt_ds['akb_orb_mlt'] <= mlt_range[1]))
-    if mlat_range == [-90, 90]:
-        pass
-    else:
-        condition = condition & ((ilat_mlt_ds['akb_orb_mlat'] >= mlat_range[0]) &
-                                 (ilat_mlt_ds['akb_orb_mlat'] <= mlat_range[1]))
-    filtered_data = ilat_mlt_ds.where(condition, drop=True)
+    condition = ((orb_ds['akb_orb_inv'] >= ilat_range[0]) &
+                 (orb_ds['akb_orb_inv'] < ilat_range[1]) &
+                 (orb_ds['akb_orb_mlt'] >= mlt_range[0]) &
+                 (orb_ds['akb_orb_mlt'] < mlt_range[1]) &
+                 (orb_ds['akb_orb_mlat'] >= mlat_range[0]) &
+                 (orb_ds['akb_orb_mlat'] < mlat_range[1]))
+
+    filtered_data = orb_ds.where(condition, drop=True)
     # filtered_dataの時刻データをnumpy配列として取得
     time_ary = filtered_data['time'].values
     # time_arrayで時間差が30秒以上のインデックスを取得
@@ -60,10 +59,10 @@ def get_plot_trange_list(ilat_mlt_ds, mlt_range, ilat_range, mlat_range=[-90, 90
         start_time = time_range[0]
         end_time = time_range[1]
         while True:
-            next_time = start_time + np.timedelta64(4, 'm')
+            next_time = start_time + np.timedelta64(30, 'm')
+            plot_trange_list.append([start_time, next_time])
             if next_time > end_time:
                 break
-            plot_trange_list.append([start_time, next_time])
             start_time = next_time
 
     # plot_time_range_listの中にはnumpy.datetime64型のデータが入っているので、
@@ -84,7 +83,7 @@ def plot_mca_1day(date: str):
     ilat_ds = pytplot.get_data('akb_orb_inv', xarray=True)
     mlt_ds = pytplot.get_data('akb_orb_mlt', xarray=True)
     mlat_ds = pytplot.get_data('akb_orb_mlat', xarray=True)
-    ilat_mlt_ds = xr.merge([ilat_ds, mlt_ds, mlat_ds])
+    orb_ds = xr.merge([ilat_ds, mlt_ds, mlat_ds])
 
     # MLTとILATの範囲を指定
     mlt_range = [10, 14]  # MLTの開始値と終了値を指定
@@ -92,13 +91,13 @@ def plot_mca_1day(date: str):
     mlat_range = [-90, 90]  # MLATの開始値と終了値を指定
 
     # プロットする時刻の範囲を取得
-    plot_trange_list = get_plot_trange_list(ilat_mlt_ds,
+    plot_trange_list = get_plot_trange_list(orb_ds,
                                             mlt_range, ilat_range, mlat_range)
 
     # プロット
     # save path の設定
     condition_str = 'mlt_'+str(mlt_range[0])+'_'+str(mlt_range[1])+'_ilat_'+str(ilat_range[0])+'_'+str(ilat_range[1])
-    save_dir = '../plots/mca_w_mgf/'+date[:4]+'/'+condition_str+'/'
+    save_dir = './plots/mca_w_mgf/'+date[:4]+'/'+condition_str+'/'
     os.makedirs(save_dir, exist_ok=True)
     # plot_trange_listの中身が空の場合は、データが存在しないことを表示して終了
     if len(plot_trange_list) == 0:
